@@ -116,14 +116,13 @@ public class ProjectManager
         return string.Join(Environment.NewLine, projects);
     }
 
-    [Step(description: "Anti-Thanos snap: randomly increase 50% of the projects in the solution.")]
-    [DependOn(nameof(ListProjects))]
-    public async Task<string> AntiThanosSnap(
-        [FromStep(nameof(ListProjects))] string projects)
+    [Step(description: "Anti-Thanos snap: double the projects in the solution.")]
+    public async Task<string> AntiThanosSnap()
     {
+        var projects = await ListProjects();
         var projectsList = projects.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj")).ToList();
 
-        var projectToAdd = projectsList.Count / 2;
+        var projectToAdd = projectsList.Count;
         if (projectToAdd == 0)
         {
             projectToAdd = 1;
@@ -145,10 +144,9 @@ public class ProjectManager
     }
 
     [Step(description: "Thanos snap: randomly remove 50% of the projects in the solution.")]
-    [DependOn(nameof(ListProjects))]
-    public async Task<string> ThanosSnap(
-        [FromStep(nameof(ListProjects))] string projects)
+    public async Task<string> ThanosSnap()
     {
+        var projects = await ListProjects();
         var projectsList = projects.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj")).ToList();
 
         var projectToRemove = projectsList.Count / 2;
@@ -177,10 +175,9 @@ public class ProjectManager
     }
 
     [Step(description: "Move and override .resx files to every project in the solution.")]
-    [DependOn(nameof(ListProjects))]
-    public async Task<string> MoveResxFiles(
-        [FromStep(nameof(ListProjects))] string projects)
+    public async Task<string> MoveResxFiles()
     {
+        var projects = await ListProjects();
         var projectsList = projects.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj")).ToList();
 
         var resxFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.resx");
@@ -195,7 +192,8 @@ public class ProjectManager
             
             foreach (var resxFile in resxFiles)
             {
-                var targetFile = Path.Combine(project.Replace(".csproj", ""), Path.GetFileName(resxFile));
+                var projectFolder = Directory.GetParent(project!)!.FullName;
+                var targetFile = Path.Combine(projectFolder, Path.GetFileName(resxFile));
                 var command = $"copy {resxFile} {targetFile} /y";
                 var output = RunProcess(command);
                 sb.AppendLine(output);
