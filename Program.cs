@@ -195,7 +195,7 @@ public class ProjectManager
             
             foreach (var resxFile in resxFiles)
             {
-                var command = $"copy {resxFile} {project.Replace(".csproj", "")}";
+                var command = $"copy {resxFile} {project.Replace(".csproj", "")} /y";
                 var output = RunProcess(command);
                 sb.AppendLine(output);
             }
