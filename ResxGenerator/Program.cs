@@ -99,11 +99,17 @@ public class ProjectManager
     private const string SolutionFile = "resx-generator.sln";
     private const string ThisProjectFile = "resx-generator.csproj";
 
-    [Step(description: "list all projects in the solution.")]
-    public async Task<string> ListProjects()
+    [StepWiseUITextInput(description: "the solution file path.")]
+    public async Task<string?> SolutionFilePath()
     {
-        var solution = SolutionFile;
-        var command = $"dotnet sln {solution} list";
+        return SolutionFile;
+    }
+
+    [Step(description: "list all projects in the solution.")]
+    [DependOn(nameof(SolutionFilePath))]
+    public async Task<string> ListProjects([FromStep(nameof(SolutionFilePath))] string solutionFile)
+    {
+        var command = $"dotnet sln {solutionFile} list";
         var output = RunProcess(command);
 
         var projects = output.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj") && !x.Contains("resx-generator"));
@@ -117,9 +123,11 @@ public class ProjectManager
     }
 
     [Step(description: "Anti-Thanos snap: double the projects in the solution.")]
-    public async Task<string> AntiThanosSnap()
+    [DependOn(nameof(SolutionFilePath))]
+    public async Task<string> AntiThanosSnap(
+        [FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
-        var projects = await ListProjects();
+        var projects = await ListProjects(solutionFile);
         var projectsList = projects.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj")).ToList();
 
         var projectToAdd = projectsList.Count;
@@ -144,9 +152,11 @@ public class ProjectManager
     }
 
     [Step(description: "Thanos snap: randomly remove 50% of the projects in the solution.")]
-    public async Task<string> ThanosSnap()
+    [DependOn(nameof(SolutionFilePath))]
+    public async Task<string> ThanosSnap(
+        [FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
-        var projects = await ListProjects();
+        var projects = await ListProjects(solutionFile);
         var projectsList = projects.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj")).ToList();
 
         var projectToRemove = projectsList.Count / 2;
@@ -175,9 +185,11 @@ public class ProjectManager
     }
 
     [Step(description: "Move and override .resx files to every project in the solution.")]
-    public async Task<string> MoveResxFiles()
+    [DependOn(nameof(SolutionFilePath))]
+    public async Task<string> MoveResxFiles(
+        [FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
-        var projects = await ListProjects();
+        var projects = await ListProjects(solutionFile);
         var projectsList = projects.Split(Environment.NewLine).Where(x => x.EndsWith(".csproj")).ToList();
 
         var resxFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.resx");
@@ -189,7 +201,7 @@ public class ProjectManager
             {
                 continue;
             }
-            
+
             foreach (var resxFile in resxFiles)
             {
                 var projectFolder = Directory.GetParent(project!)!.FullName;
