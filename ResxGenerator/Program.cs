@@ -106,7 +106,6 @@ public class ProjectManager
     }
 
     [Step(description: "list all projects in the solution.")]
-    [DependOn(nameof(SolutionFilePath))]
     public async Task<string> ListProjects([FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
         var command = $"dotnet sln {solutionFile} list";
@@ -123,7 +122,6 @@ public class ProjectManager
     }
 
     [Step(description: "Anti-Thanos snap: double the projects in the solution.")]
-    [DependOn(nameof(SolutionFilePath))]
     public async Task<string> AntiThanosSnap(
         [FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
@@ -152,7 +150,6 @@ public class ProjectManager
     }
 
     [Step(description: "Thanos snap: randomly remove 50% of the projects in the solution.")]
-    [DependOn(nameof(SolutionFilePath))]
     public async Task<string> ThanosSnap(
         [FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
@@ -185,7 +182,6 @@ public class ProjectManager
     }
 
     [Step(description: "Move and override .resx files to every project in the solution.")]
-    [DependOn(nameof(SolutionFilePath))]
     public async Task<string> MoveResxFiles(
         [FromStep(nameof(SolutionFilePath))] string solutionFile)
     {
@@ -209,6 +205,7 @@ public class ProjectManager
                 var command = $"copy {resxFile} {targetFile} /y";
                 var output = RunProcess(command);
                 sb.AppendLine(output);
+                Console.WriteLine(output);
             }
         }
 
